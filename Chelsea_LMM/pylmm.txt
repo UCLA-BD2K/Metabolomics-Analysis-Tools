@@ -1,0 +1,8 @@
+map file:
+chr rs_id
+
+tfam file:
+individual_id inidvidual_id X1 X2 X3
+
+tped file:
+chr rs_id 0 position genotype 36*2
