@@ -1,7 +1,7 @@
-######################## Plot_Metabolites_Expression.R #####################
-# Function: for a given list of metabolites, plot the quantification for   #
-#   all patients across different time points                              #
-# Usage: R --no-save < Plot_Metabolties_Expression.R --args input          # 
+######################## Plot_Metabolites_FoldChange.R #####################
+# Function: for a given list of metabolites, plot the fold change          #
+#           quantification for all patients across different time points   #
+# Usage: R --no-save < Plot_Metabolties_FoldChange.R --args input          # 
 #                                                     metabolties outfile  # 
 # Arguments: input = R data                                                # 
 #            metabolites = list of metabolites                             #
@@ -39,14 +39,30 @@ metabolite_query <- metabolite_query$V1;
 
 # retrieve data
 quant <- Data_Obj_RMRedundancy$quantification;
-quant_query <- melt(quant[, colnames(quant) %in% metabolite_query])
+quant[is.na(quant)] <- 0;
+quant_query <- quant[, colnames(quant) %in% metabolite_query];
+
+T0_quant <- quant_query;
+for(i in 1:nrow(T0_quant)){
+  patient_id <- as.character(Data_Obj_RMRedundancy$subjectNumber[i]);
+#  row_id <- which(Data_Obj_RMRedundancy$subjectNumber==patient_id & Data_Obj_RMRedundancy$timepoint=="T0")
+  row_id <- which(Data_Obj_RMRedundancy$subjectNumber==patient_id)[1] #P25 doesn't have T0
+  T0_quant[i,] <- quant_query[row_id,];
+}
+
+## to avoid 0, add 1 to everything
+T0_quant <- T0_quant + 1;
+quant_query <- quant_query + 1;
+quant_fc <- quant_query / T0_quant;
+quant_log_fc <- log(quant_fc, 2);
+quant_log_fc <- melt(quant_log_fc);
 
 ## reformat data
 data <- data.frame(
   patients = rep(Data_Obj_RMRedundancy$subjectNumber, length(metabolite_query)),
   days = rep(Data_Obj_RMRedundancy$fromSurgeryDate, length(metabolite_query)),
-  metabolites = quant_query$Var2,
-  expression = quant_query$value
+  metabolites = quant_log_fc$Var2,
+  expression = quant_log_fc$value
 );
 
 pdf(file=outfile, width=11, height=11)
@@ -54,12 +70,13 @@ p <- ggplot(data = data, aes(x=days, y= expression, group = patients, colour=pat
   geom_point() +
   geom_line() +
   xlab("Days from Sugery") +
-  ylab("Quantification") + 
+  ylab("log2-based Fold Change vs T0") + 
   facet_wrap( ~ metabolites, ncol = 10, scales="free") + 
   theme(strip.text.x = element_text(size = 6, angle=10)) + 
   theme(axis.text.x = element_text(size = 5, angle=45)) + 
   theme(axis.text.y = element_text(size = 5)) +
   theme(axis.title.x = element_text(size=12)) + 
   theme(axis.title.y = element_text(size=12))  
+
 print(p)
 dev.off();
