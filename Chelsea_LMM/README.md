@@ -24,6 +24,7 @@ R --no-save --slave < 03_Data_Summary.R --args Mouse_LMM/Output/t0_metabolite_co
 ```
 
 Alternatively, pylmm can be run independantly
+
 **Build kinship imatrix**
 ```
 python pylmmKinship.py --emmaSNP Mouse_LMM/Input/snp.emma --emmaNumSNPs=243128 Mouse_LMM/Input/genotype_kinship.kin
