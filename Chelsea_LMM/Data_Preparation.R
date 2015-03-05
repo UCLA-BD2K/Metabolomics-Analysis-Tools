@@ -24,6 +24,8 @@ data_path <- options[1];
 snp_path <- options[2];
 outdir <- options[3]
 
+dir.create(file.path(outdir), showWarnings = FALSE, recursive = TRUE)
+
 load(data_path);
 snp <- read.table(snp_path, header = T);
 colnames(snp) <- gsub("\\.", '-', colnames(snp));
